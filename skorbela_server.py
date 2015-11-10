@@ -6,8 +6,11 @@ from BaseHTTPServer import HTTPServer
 from SimpleHTTPServer import SimpleHTTPRequestHandler
 import ssl
 from base64 import b64encode
-from HTTPWebSocketsHandler import HTTPWebSocketsHandler
 import simplejson as json
+
+# I don't want a .pyc file there.
+sys.dont_write_bytecode = True
+from HTTPWebSocketsHandler import HTTPWebSocketsHandler
 
 port = 31313
 credentials = ""
