@@ -3,10 +3,10 @@
 import sys
 
 file_list = ["index.html",
-			 "add_competitor/index.html",
-			 "add_control/index.html",
-			 "do_stuff/index.html",
-			 "results/index.html"]
+	     "add_competitor/index.html",
+	     "add_control/index.html",
+	     "do_stuff/index.html",
+	     "results/index.html"]
 
 def print_usage():
 	print "\nThis changes the version numbers in HTML files' titles."
@@ -28,7 +28,4 @@ for file_path in file_list:
 	file_handle.write(file_string.replace(old_string, new_string))
 	file_handle.close()
 	
-
-
-
 
