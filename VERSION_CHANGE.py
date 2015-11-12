@@ -23,8 +23,10 @@ for file_path in file_list:
 	print "processing", file_path
 	file_handle = open(file_path, "r+")
 	file_string = file_handle.read()
-	file_handle.truncate(0)
+	file_handle.close()
+	file_handle = open(file_path, "w")
 	file_handle.write(file_string.replace(old_string, new_string))
+	file_handle.close()
 	
 
 

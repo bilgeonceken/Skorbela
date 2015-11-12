@@ -23,9 +23,14 @@ class ConnectHandler(HTTPWebSocketsHandler):
 			message = ''
 		try:
 			json_object = json.loads(message)
-			print "JSON object received from websocket:", json_object
+			print "JSON object received:", json_object
+			print "action:", json_object["action"]
+			print "name:", json_object["name"]
 		except ValueError:
-			print "Regular string received from websocket:", message		
+			print "Data is not JSON. Rejecting it."
+
+		else:
+			print "Unknown data incoming:\n", message
 
 	def on_ws_connected(self):
 		self.log_message('%s','websocket connected')
