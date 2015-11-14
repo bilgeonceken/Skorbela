@@ -3,6 +3,7 @@
 import sys
 
 file_list = ["index.html",
+		 "add_category/index.html",
 	     "add_competitor/index.html",
 	     "add_control/index.html",
 	     "do_stuff/index.html",
