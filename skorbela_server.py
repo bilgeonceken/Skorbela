@@ -16,6 +16,7 @@ from HTTPWebSocketsHandler import HTTPWebSocketsHandler
 
 port = 31313
 credentials = ""
+pass_hash = 'e1ed02693ddaad40e1f2a249a0915b0bc694c4d20760ca1d95c045ede86ff8ba'
 
 # Where is our page updater? We'll need it.
 # Since file-read while socket is open is blocking,
@@ -24,29 +25,33 @@ page_updater = "./page_updater.py"
 
 # category handling functions
 # those update add_competitor/index.html 
-	
-# take soup. find <select> tags. insert an <option>CATEGORY</option> tag between them.
+
 def add_category(category):
 	print "Calling my child to do the job."	
 	args = [page_updater, "add", category]
 	p = subprocess.Popen(args)
 
-# clear between <select> tags.
 def reset_categories():
 	print "Calling my child to do the job."
 	args = [page_updater, "reset"]
 	p = subprocess.Popen(args)
 
-# find the category option. destroy it.
 def delete_category(category):
 	print "Calling my child to do the job."
 	args = [page_updater, "delete", category]
 	p = subprocess.Popen(args)
 
+# password handling functions
+
+def change_password(old_hash, new_hash):
+	if(pass_hash == old_hash):
+		pass_hash = new_hash
+	else:	
+		raise ValueError("Invalid password")
+
 #
 # main connection handler
 # 
-
 class ConnectHandler(HTTPWebSocketsHandler):
 	def on_ws_message(self, message):
 		if message is None:
@@ -56,21 +61,33 @@ class ConnectHandler(HTTPWebSocketsHandler):
 			json_object = json.loads(message)
 			print "JSON object received:", json_object
 			print "action:", json_object["action"]
+			print "hash:", json_object["hash"]
+			incoming_hash = json_object["hash"]
 			action = json_object["action"]
-			if(action == "ADD_CATEGORY"):
-				add_category(json_object["category"])
-			elif (action == "RESET_CATEGORY"):
-				reset_categories()
-			elif (action == "ADD_COMPETITOR"):
-				pass
-			elif (action == "ADD_CONTROL"):
-				pass
-			elif (action == "CALCULATE_SCORE"):
-				pass
+
+			if(incoming_hash == pass_hash):
+				if(action == "ADD_CATEGORY"):
+					add_category(json_object["category"])
+				elif (action == "RESET_CATEGORY"):
+					reset_categories()
+				elif (action == "ADD_COMPETITOR"):
+					pass
+				elif (action == "ADD_CONTROL"):
+					pass
+				elif (action == "CALCULATE_SCORE"):
+					pass
+				elif (action == "CHANGE_PASSWORD"):
+					try:
+						change_password(json_object["old_hash"], json_object["new_hash"])				
+					except ValueError:
+						self.log_message("Password change attempt with invalid password: %s", json.dumps(json_object))
+				else:
+					self.log_message("Unknown action: %s", action)
 			else:
-				self.log_message("Unknown action: %s", action)
+				self.log_message("Invalid hash: %s", incoming_hash)
+
 		except ValueError:
-			print self.log_message("Unknown data incoming: %s", message)
+			self.log_message("Unknown data incoming: %s", message)
 
 	def on_ws_connected(self):
 		self.log_message('%s','websocket connected')
