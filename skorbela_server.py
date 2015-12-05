@@ -98,9 +98,6 @@ class MyServerProtocol(WebSocketServerProtocol):
 		else:
 			print("Text message received: {0}".format(payload.decode('utf8')))
 
-		# echo back message verbatim
-		self.sendMessage(payload, isBinary)
-
 	def onClose(self, wasClean, code, reason):
 		# Remove the connection from websockets list.
 		del client_list[self.uid]
