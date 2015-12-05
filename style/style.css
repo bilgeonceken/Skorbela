@@ -1,3 +1,15 @@
 button.dangerzone {
 	background-color: #ff6666;
 }
+
+span.red {
+	color : #BB0000;
+}
+
+span.yellow {
+	color : #BA5D00; 
+}
+
+span.green {
+	color : #00BABA;
+}

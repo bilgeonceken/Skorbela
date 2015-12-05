@@ -3,15 +3,20 @@
 <link rel="stylesheet" type="text/css" href="../style/style.css" />
 <script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
 <script src="add_category.js"></script>
-<title> SKORBELA 0.1.3 - ADD CATEGORY </title>
+<title> SKORBELA 0.2.0 - ADD CATEGORY </title>
 </head>
 <body>
 <h1> ADD CATEGORY </h1>
+server connection: <span id="conn_status" class="red"> not connected </span> </div>
+<h4> add </h4>
 CATEGORY: <input id="category" /> <br />
 PASSWORD: <input id="password" type="password" /> <br />
-<button onClick="add_category()" >ADD</button>
+<button onClick="add_category()" >ADD</button><br />
+<h4> delete </h4>
+Available categories: <div id="categories">Getting categories...</div>
+<button onClick="delete_category()" > DELETE </button> <br />
+<h4> reset </h4>
 <button onClick="reset_categories()" class="dangerzone"> RESET </button><br />
 <hr />
-<h6> deli çöz bi fişek </h6>
-<h6> ya da sus da düşek </h6>
+<h6> Deli çöz bi fişek - ya da sus da düşek </h6>
 

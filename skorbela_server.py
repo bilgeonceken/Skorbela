@@ -1,113 +1,125 @@
-#main program and imports for standalone purpose	   
-import sys
-import threading
-from SocketServer import ThreadingMixIn
-from BaseHTTPServer import HTTPServer
-from SimpleHTTPServer import SimpleHTTPRequestHandler
-import ssl
-from bs4 import BeautifulSoup
-from base64 import b64encode
+#! /usr/bin/env python3
+
+from jsondb.db import Database
 import simplejson as json
-import subprocess
+import string
+import random
 
-# I don't want a .pyc file there.
-sys.dont_write_bytecode = True
-from HTTPWebSocketsHandler import HTTPWebSocketsHandler
+import asyncio
+from autobahn.asyncio.websocket import WebSocketServerProtocol, \
+    WebSocketServerFactory
 
-port = 31313
-credentials = ""
+# This holds clients and their unique ID's.
+client_list = {} 
+# Our database.
+db = Database("db.json")
+# Hash for authentication. By default the password is SHA256 of "31Seks31", but change this 
+# as soon as you've finished testing.
 pass_hash = 'e1ed02693ddaad40e1f2a249a0915b0bc694c4d20760ca1d95c045ede86ff8ba'
 
-# Where is our page updater? We'll need it.
-# Since file-read while socket is open is blocking,
-# we need to call child processes to do file-updates.
-page_updater = "./page_updater.py"
+#
+# Category handling functions. These handle the connection with jsondatabase.
+# 
 
-# category handling functions
-# those update add_competitor/index.html 
+def get_categories():
+	try:
+		return db["categories"]
+	except KeyError:
+		return []
+
+def send_categories(uid):
+	try:
+		data = {"action" : "SEND_CATEGORIES", "categories" : get_categories()}
+		client_list[uid].sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
+		return 0
+	except KeyError:
+		return 1
 
 def add_category(category):
-	print "Calling my child to do the job."	
-	args = [page_updater, "add", category]
-	p = subprocess.Popen(args)
+	try:
+		categories = db["categories"]
+		if not category in categories: # If not present, add it to the database.
+			db["categories"] = db["categories"] + [category]
+			return 0
+		else:
+			return 1
+	except KeyError:
+		db["categories"] = [category]
 
 def reset_categories():
-	print "Calling my child to do the job."
-	args = [page_updater, "reset"]
-	p = subprocess.Popen(args)
+	db["categories"] = []
 
-def delete_category(category):
-	print "Calling my child to do the job."
-	args = [page_updater, "delete", category]
-	p = subprocess.Popen(args)
+class MyServerProtocol(WebSocketServerProtocol):
 
-# password handling functions
-
-def change_password(old_hash, new_hash):
-	if(pass_hash == old_hash):
-		pass_hash = new_hash
-	else:	
-		raise ValueError("Invalid password")
-
-#
-# main connection handler
-# 
-class ConnectHandler(HTTPWebSocketsHandler):
-	def on_ws_message(self, message):
-		if message is None:
-			message = ''
-
+	def onConnect(self, request):
+		print("Client connecting: {0}".format(request.peer))
+	
+	def onOpen(self):
+		print("WebSocket connection open.")
+		# Assign the connection an unique ID.
+		self.uid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
+		# Save the connection into the client_list.
+		client_list[self.uid] = self
+		# Inform the client about its UID.
+		print("Assigned %s to the connection as the unique ID." % self.uid)
+		data = {"action" : "SEND_UID", "uid" : self.uid}
+		self.sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
+			
+	def	onMessage(self, payload, isBinary):
 		try:
-			json_object = json.loads(message)
-			print "JSON object received:", json_object
-			print "action:", json_object["action"]
-			print "hash:", json_object["hash"]
-			incoming_hash = json_object["hash"]
-			action = json_object["action"]
+			data = json.loads(payload)
+			action = data["action"]
+			uid = data["uid"]
 
-			if(incoming_hash == pass_hash):
-				if(action == "ADD_CATEGORY"):
-					add_category(json_object["category"])
-				elif (action == "RESET_CATEGORY"):
-					reset_categories()
-				elif (action == "ADD_COMPETITOR"):
-					pass
-				elif (action == "ADD_CONTROL"):
-					pass
-				elif (action == "CALCULATE_SCORE"):
-					pass
-				elif (action == "CHANGE_PASSWORD"):
-					try:
-						change_password(json_object["old_hash"], json_object["new_hash"])				
-					except ValueError:
-						self.log_message("Password change attempt with invalid password: %s", json.dumps(json_object))
+			if(action == "GET_CATEGORIES"):	# If someone wants categories, give them categories.
+				send_categories(uid)
+			if(action == "ADD_CATEGORY"): # If someone adds a category, send everyone the new categories.
+				if data["hash"] == pass_hash:
+					add_category(data["category"])
+					for unique_id in client_list:
+						send_categories(unique_id)
 				else:
-					self.log_message("Unknown action: %s", action)
-			else:
-				self.log_message("Invalid hash: %s", incoming_hash)
+					print ("Invalid hash from UID = %s" % uid)
+			if(action == "RESET_CATEGORIES"): # Also if someone resets all categories, send the empty list.
+				if data["hash"] == pass_hash:
+					reset_categories()
+					for unique_id in client_list:
+						send_categories(unique_id)				
+				else:
+					print ("Invalid hash from UID = %s" % uid)
 
-		except ValueError:
-			self.log_message("Unknown data incoming: %s", message)
+		except json.scanner.JSONDecodeError: # If simplejson cries about non-JSON data,
+			print("Non-JSON data received.")
+		except KeyError:
+			print("Bogus JSON object.")
+		
+		if isBinary:
+			print("Binary message received: {0} bytes".format(len(payload)))
+		else:
+			print("Text message received: {0}".format(payload.decode('utf8')))
 
-	def on_ws_connected(self):
-		self.log_message('%s','websocket connected')
+		# echo back message verbatim
+		self.sendMessage(payload, isBinary)
 
-	def on_ws_closed(self):
-		self.log_message('%s','websocket closed')
-
-class ThreadedHTTPServer(ThreadingMixIn, HTTPServer):
-	"""Handle requests in a separate thread."""
-   
-def _ws_main():
-	try:
-		server = ThreadedHTTPServer(('', port), ConnectHandler)
-		server.daemon_threads = True
-		server.auth = b64encode(credentials)
-		print('started http server at port %d' % (port,))
-		server.serve_forever()
-	except KeyboardInterrupt:
-		print('^C received, shutting down server')
-		server.socket.close()
-
+	def onClose(self, wasClean, code, reason):
+		# Remove the connection from websockets list.
+		del client_list[self.uid]
+		print(("WebSocket connection with ID %s closed: {0}" % self.uid).format(reason))
+	
+	
 if __name__ == '__main__':
-	_ws_main()
+
+	factory = WebSocketServerFactory(u"ws://127.0.0.1:31313", debug=False)
+	factory.protocol = MyServerProtocol
+
+	loop = asyncio.get_event_loop()
+	coro = loop.create_server(factory, '0.0.0.0', 31313)
+	server = loop.run_until_complete(coro)
+	
+	try:
+		loop.run_forever()
+	except KeyboardInterrupt:
+		pass
+	finally:
+		server.close()
+		loop.close()
