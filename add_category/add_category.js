@@ -26,6 +26,7 @@ function connect(address)
 			document.getElementById("conn_status").className = "green";
 			// Get categories since we made the connection.
 			get_categories();
+			get_controls();
 		}
 		else if(action == "SEND_CATEGORIES"){
 			categories = data.categories;
@@ -43,8 +44,32 @@ function connect(address)
 			div_value += "</select>";
 			document.getElementById("categories").innerHTML = div_value;	
 		}
+		else if(action == "SEND_CONTROLS"){
+			controls = data.controls;
+			if(controls.length == 0){
+				document.getElementById("delete_control").disabled = true;
+			} else {
+				document.getElementById("delete_control").disabled = false;
+			}
+			document.getElementById("controls").innerHTML = "";
+			dropdown = document.createElement("select");
+			dropdown.id = "control_delete";
+			for(i = 0; i < controls.length; i++){
+				option = document.createElement("option");
+				option.value = controls[i].number;
+				text = "Control " + controls[i].number + ", " + controls[i].points + " pts";
+				content = document.createTextNode(text);
+				option.appendChild(content);
+				dropdown.appendChild(option);
+			}
+			document.getElementById("controls").appendChild(dropdown);
+		}
 	}
 }
+
+//
+// Category handling functions.
+//
 
 function get_categories()
 {
@@ -79,5 +104,45 @@ function reset_categories()
 {
 	var pass = document.getElementById("password").value;
 	data = { "password" : pass , "uid" : uid, "action" : "RESET_CATEGORIES" };
+	ws.send(JSON.stringify(data));
+}
+
+//
+// Control handling functions.
+//
+
+function get_controls()
+{
+	data = { "uid" : uid, "action" : "GET_CONTROLS" }
+	ws.send(JSON.stringify(data));
+}
+
+function add_control()
+{
+	var pass = document.getElementById("password").value;
+	var control_number = document.getElementById("control_number").value;
+	var control_points = document.getElementById("control_points").value;
+	data = { "password" : pass, "uid" : uid, "action" : "ADD_CONTROL", "number" : control_number, "points" : control_points };
+	ws.send(JSON.stringify(data));
+}
+
+function delete_control()
+{
+	try {
+		var dropdown = document.getElementById("control_delete");
+		var control = dropdown.options[dropdown.selectedIndex].value;
+		var pass = document.getElementById("password").value;
+
+		data = { "password" : pass, "uid" : uid, "action" : "DELETE_CONTROL", "number" : control };
+		ws.send(JSON.stringify(data));
+	} catch(e) {
+		alert("error " + e.name + ": " + e.message);
+	}
+}
+
+function reset_controls()
+{
+	var pass = document.getElementById("password").value;
+	data = { "password" : pass, "uid" : uid, "action" : "RESET_CONTROLS" };
 	ws.send(JSON.stringify(data));
 }

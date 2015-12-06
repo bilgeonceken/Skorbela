@@ -2,20 +2,27 @@
 <meta charset="utf-8" />
 <link rel="stylesheet" type="text/css" href="../style/style.css" />
 <script src="add_category.js"></script>
-<title> SKORBELA 0.2.2 - ADD CATEGORY </title>
+<title> SKORBELA 0.3.0 - ADD CATEGORY / CONTROL </title>
 </head>
 <body onLoad="javascript:connect('ws://localhost:31313')">
+<div>
 <h1> ADD CATEGORY </h1>
 server connection: <span id="conn_status" class="red"> not connected </span> </div>
-<h4> add </h4>
 CATEGORY: <input id="category" /> <br />
 PASSWORD: <input id="password" type="password" /> <br />
 <button onClick="add_category()" >ADD</button><br />
-<h4> delete </h4>
-Available categories: <div id="categories">Getting categories...</div>
+<b>Available categories:</b> <div id="categories">Getting categories...</div>
 <button onClick="delete_category()" id="delete_category" > DELETE </button> <br />
-<h4> reset </h4>
 <button onClick="reset_categories()" class="dangerzone"> RESET </button><br />
+</div>
+<div>
+<h1> ADD CONTROL </h1>
+CONTROL NUMBER: <input id="control_number" /><br />
+CONTROL POINTS: <input id="control_points" /><br />
+<button onClick="add_control()">ADD</button><br />
+<b>Controls :</b> <div id="controls"> Getting controls... </div>
+<button onClick="delete_control()" id="delete_control">DELETE</button><br />
+<button onClick="reset_controls()" class="dangerzone"> RESET </button>
+</div>
 <hr />
 <h6> Deli çöz bi fişek - ya da sus da düşek </h6>
-
