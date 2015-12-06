@@ -1,37 +1,48 @@
-var ws = new WebSocket("ws://localhost:31313/");
-var uid = "0";
+var ws, uid; // export die variables
 
-ws.onopen = function()
+function connect(address)
 {
-	// If a connection is opened, make our red text yellow, we are waiting for the server to
-	// send us our unique ID.
-	document.getElementById("conn_status").innerHTML = "Connected - waiting for UID.";
-	document.getElementById("conn_status").className = "yellow";
-}
-ws.onmessage = function(evt) // What to do on server message
-{
-	// try to parse server's message
-	data = JSON.parse(evt.data);
+	ws = new WebSocket(address);
+	uid = "0";
 
-	action = data.action;
-
-	if(action == "SEND_UID"){ // If server is sending our unique ID, we established the connection.
-		// Make the text green.
-		uid = data.uid;
-		document.getElementById("conn_status").innerHTML = "Connected - UID: " + uid;
-		document.getElementById("conn_status").className = "green";
-		// Get categories since we made the connection.
-		get_categories();
+	ws.onopen = function()
+	{
+		// If a connection is opened, make our red text yellow, we are waiting for the server to
+		// send us our unique ID.
+		document.getElementById("conn_status").innerHTML = "Connected - waiting for UID.";
+		document.getElementById("conn_status").className = "yellow";
 	}
-	else if(action == "SEND_CATEGORIES"){
-		categories = data.categories;
-		// prepare our div's inner html
-		div_value = "<select id=\"category_delete\">";
-		for(i = 0; i < categories.length; i++){
-			div_value = div_value + "<option>" + categories[i] + "</option>";
+	ws.onmessage = function(evt) // What to do on server message
+	{
+		// try to parse server's message
+		data = JSON.parse(evt.data);
+	
+		action = data.action;
+	
+		if(action == "SEND_UID"){ // If server is sending our unique ID, we established the connection.
+			// Make the text green.
+			uid = data.uid;
+			document.getElementById("conn_status").innerHTML = "Connected - UID: " + uid;
+			document.getElementById("conn_status").className = "green";
+			// Get categories since we made the connection.
+			get_categories();
 		}
-		div_value += "</select>";
-		document.getElementById("categories").innerHTML = categories;	
+		else if(action == "SEND_CATEGORIES"){
+			categories = data.categories;
+			// If there are no categories, disable the delete-category button.
+			if (categories.length == 0){
+				document.getElementById("delete_category").disabled = true;
+			} else {
+				document.getElementById("delete_category").disabled = false;
+			}
+			// prepare our div's inner html
+			div_value = "<select id=\"category_delete\">";
+			for(i = 0; i < categories.length; i++){
+				div_value = div_value + "<option>" + categories[i] + "</option>";
+			}
+			div_value += "</select>";
+			document.getElementById("categories").innerHTML = div_value;	
+		}
 	}
 }
 
@@ -43,15 +54,30 @@ function get_categories()
 
 function add_category()
 {
-	var hash = CryptoJS.SHA256(document.getElementById("password").value);
+	var pass = document.getElementById("password").value;
 	var category = document.getElementById("category").value;
-	data = { "hash" : hash.toString(CryptoJS.enc.Hex) , "uid" : uid,  "action" : "ADD_CATEGORY", "category" : category };
+	data = { "password" : pass , "uid" : uid,  "action" : "ADD_CATEGORY", "category" : category };
 	ws.send(JSON.stringify(data));	
+}
+
+function delete_category()
+{
+	try {
+		var dropdown = document.getElementById("category_delete");
+		var category = dropdown.options[dropdown.selectedIndex].text;
+		var pass = document.getElementById("password").value;
+		
+		data = { "password" : pass, "uid" : uid, "action" : "DELETE_CATEGORY", "category" : category };
+		ws.send(JSON.stringify(data));
+	} catch (e) {
+		/* TO-DO : Put a div in pages to display error messages. */
+		alert("error " + e.name + ": " + e.message);
+	}
 }
 
 function reset_categories()
 {
-	var hash = CryptoJS.SHA256(document.getElementById("password").value);
-	data = { "hash" : hash.toString(CryptoJS.enc.Hex) , "uid" : uid, "action" : "RESET_CATEGORIES" };
+	var pass = document.getElementById("password").value;
+	data = { "password" : pass , "uid" : uid, "action" : "RESET_CATEGORIES" };
 	ws.send(JSON.stringify(data));
 }

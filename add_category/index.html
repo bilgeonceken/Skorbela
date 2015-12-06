@@ -1,11 +1,10 @@
 <head>
 <meta charset="utf-8" />
 <link rel="stylesheet" type="text/css" href="../style/style.css" />
-<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
 <script src="add_category.js"></script>
-<title> SKORBELA 0.2.0 - ADD CATEGORY </title>
+<title> SKORBELA 0.2.2 - ADD CATEGORY </title>
 </head>
-<body>
+<body onLoad="javascript:connect('ws://localhost:31313')">
 <h1> ADD CATEGORY </h1>
 server connection: <span id="conn_status" class="red"> not connected </span> </div>
 <h4> add </h4>
@@ -14,7 +13,7 @@ PASSWORD: <input id="password" type="password" /> <br />
 <button onClick="add_category()" >ADD</button><br />
 <h4> delete </h4>
 Available categories: <div id="categories">Getting categories...</div>
-<button onClick="delete_category()" > DELETE </button> <br />
+<button onClick="delete_category()" id="delete_category" > DELETE </button> <br />
 <h4> reset </h4>
 <button onClick="reset_categories()" class="dangerzone"> RESET </button><br />
 <hr />

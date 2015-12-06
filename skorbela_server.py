@@ -4,6 +4,7 @@ from jsondb.db import Database
 import simplejson as json
 import string
 import random
+import hashlib
 
 import asyncio
 from autobahn.asyncio.websocket import WebSocketServerProtocol, \
@@ -16,6 +17,13 @@ db = Database("db.json")
 # Hash for authentication. By default the password is SHA256 of "31Seks31", but change this 
 # as soon as you've finished testing.
 pass_hash = 'e1ed02693ddaad40e1f2a249a0915b0bc694c4d20760ca1d95c045ede86ff8ba'
+
+def check_hash(password):
+	global pass_hash
+	if hashlib.sha256(password.encode('utf-8')).hexdigest() == pass_hash:
+		return True
+	else:
+		return False	
 
 #
 # Category handling functions. These handle the connection with jsondatabase.
@@ -46,6 +54,14 @@ def add_category(category):
 	except KeyError:
 		db["categories"] = [category]
 
+def delete_category(category):
+	try:
+		categories = db["categories"]
+		# Filter our category out of the category list.
+		db["categories"] = [cat for cat in categories if cat != category]
+	except KeyError:
+		db["categories"] = []
+
 def reset_categories():
 	db["categories"] = []
 
@@ -56,7 +72,7 @@ class MyServerProtocol(WebSocketServerProtocol):
 	
 	def onOpen(self):
 		print("WebSocket connection open.")
-		# Assign the connection an unique ID.
+		# Assign the conn²ection an unique ID.
 		self.uid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
 		# Save the connection into the client_list.
 		client_list[self.uid] = self
@@ -73,20 +89,19 @@ class MyServerProtocol(WebSocketServerProtocol):
 
 			if(action == "GET_CATEGORIES"):	# If someone wants categories, give them categories.
 				send_categories(uid)
-			if(action == "ADD_CATEGORY"): # If someone adds a category, send everyone the new categories.
-				if data["hash"] == pass_hash:
-					add_category(data["category"])
+			elif action == "ADD_CATEGORY" or action == "DELETE_CATEGORY" or action == "RESET_CATEGORIES":
+				if check_hash(data["password"]): 
+					if action == "ADD_CATEGORY":
+						add_category(data["category"])
+					elif action == "DELETE_CATEGORY":
+						delete_category(data["category"])
+					elif action == "RESET_CATEGORIES":
+						reset_categories()
+					# Send everyone the new category list.
 					for unique_id in client_list:
 						send_categories(unique_id)
 				else:
-					print ("Invalid hash from UID = %s" % uid)
-			if(action == "RESET_CATEGORIES"): # Also if someone resets all categories, send the empty list.
-				if data["hash"] == pass_hash:
-					reset_categories()
-					for unique_id in client_list:
-						send_categories(unique_id)				
-				else:
-					print ("Invalid hash from UID = %s" % uid)
+					print ("Invalid password from UID = %s" % uid)
 
 		except json.scanner.JSONDecodeError: # If simplejson cries about non-JSON data,
 			print("Non-JSON data received.")
