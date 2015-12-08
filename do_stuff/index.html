@@ -2,12 +2,13 @@
 <head>
 <meta charset="utf-8" />
 <link rel="stylesheet" type="text/css" href="../style/style.css" />
-<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
 <title> SKORBELA 0.3.0 - DO STUFF </title>
 <script src="do_stuff.js"></script>
 </head>
-<body>
-WE DO STUFF HERE
+<body onLoad="connect('ws://localhost:31313');">
+connection status: <span id="conn_status" class="red"> not connected </span> <br />
+<table id="controls" border="1"></table><br />
+<table id="competitors" border="1"> </table>
 </body>
 <hr />
 <h6> deli çöz bi fişek </h6>

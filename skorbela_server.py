@@ -5,11 +5,14 @@ import simplejson as json
 import string
 import random
 import hashlib
+import txaio
+
 
 import asyncio
 from autobahn.asyncio.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory
 
+txaio.use_asyncio()
 # This holds clients and their unique ID's.
 client_list = {} 
 # Our database.
@@ -69,7 +72,8 @@ def reset_categories():
 
 def get_competitors():
 	if not db["competitors"] is None:
-		return db["competitors"]
+		# Sort competitors by their CID's.
+		return sorted(db["competitors"], key=lambda comp: comp["cid"])
 	else:
 		return []
 
@@ -116,7 +120,8 @@ def delete_competitor(cids):
 
 def get_controls():
 	if not db["controls"] is None:
-		return db["controls"]
+		# Sort controls by their numbers.
+		return sorted(db["controls"], key=lambda cont: cont["number"])
 	else:
 		return []
 
