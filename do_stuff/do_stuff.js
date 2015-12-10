@@ -1,5 +1,6 @@
-var ws, uid; // export die variables
-var cb_array = [];
+var ws, uid, errorTimeoutID; // export die variables
+var checkbox_array = [];
+var competitor_id_array = [];
 
 function connect(address)
 {
@@ -26,82 +27,81 @@ function connect(address)
 			document.getElementById("conn_status").innerHTML = "Connected - UID: " + uid;
 			document.getElementById("conn_status").className = "green";
 			// Get data since we made the connection.
-			get_competitors();
 			get_controls();
-		} else if (action == "SEND_COMPETITORS") {
+			get_competitors();
+		}
+		else if (action == "SEND_COMPETITORS")
+		{
+			// We only need the competitors' IDs. Store them in a global array.
 			competitors = data.competitors;
-			// Get our table and restore its initial state.
-			table = document.getElementById("competitors");
-			table.innerHTML = "<thead> <tr> <th> SELECT </th> <th> ID </th> <th> NAME </th> <th> CLUB </th> <th> CATEGORY </th> <th> SCORE </th>	</tr> </thead>";
-			// Append competitor data onto table's body.
-			tbody = document.createElement("tbody");
+						
+			competitor_id_array = [];
 			for(i = 0; i < competitors.length; i++){
-				competitor = competitors[i];
-				// create cells
-				row = document.createElement("tr")
-				// make our checkbox
-				checkbox = document.createElement("input");
-				checkbox.type = "checkbox";
-				checkbox.id = competitor.cid;
-				// We need to store the checkbox as well. We will loop over it later.
-				cb_array.push(checkbox);
-				// Make the checkbox cell.
-				cb_cell = document.createElement("td");
-				cb_cell.appendChild(checkbox);
-				id_cell = document.createElement("td");
-				id_cell.appendChild(document.createTextNode(competitor.cid));		
-				name_cell = document.createElement("td");
-				name_cell.appendChild(document.createTextNode(competitor.name));
-				club_cell = document.createElement("td");
-				club_cell.appendChild(document.createTextNode(competitor.club));
-				category_cell = document.createElement("td");
-				category_cell.appendChild(document.createTextNode(competitor.category));
-				score_cell = document.createElement("td");
-				score_cell.appendChild(document.createTextNode(competitor.score));	
-				// Make row with cells.
-				row.appendChild(cb_cell);
-				row.appendChild(id_cell);
-				row.appendChild(name_cell);
-				row.appendChild(club_cell);
-				row.appendChild(category_cell);
-				row.appendChild(score_cell);
-				// Add row to tbody.
-				tbody.appendChild(row);
-			}			
-			table.appendChild(tbody);
-		} else if (action == "SEND_CONTROLS") {
+				competitor_id_array.push(competitors[i].cid);
+			}
+		}
+		else if (action == "SEND_CONTROLS") 
+		{
+			// If we get control data, we build our control table.
 			var controls = data.controls;
 			var table = document.getElementById("controls");
 			table.innerHTML = "";
-			// the table will consist of two rows, prepare their headers
+			// the table will consist of three rows, prepare their headers
 			row1 = document.createElement("tr");
 			row1_header = document.createElement("td");
+			row1_span = document.createElement("span");
+			row1_span.className = "table_header"
 			row1_text = document.createTextNode("CONTROL NUMBER");
-			row1_header.appendChild(row1_text);
+			row1_span.appendChild(row1_text);
+			row1_header.appendChild(row1_span);
 			row1.appendChild(row1_header);
-			//
+			//row2 contains points
 			row2 = document.createElement("tr");
 			row2_header = document.createElement("td");
+			row2_span = document.createElement("span");
+			row2_span.className = "table_header"
 			row2_text = document.createTextNode("PTS");
-			row2_header.appendChild(row2_text);
-			row2.appendChild(row2_header);			
+			row2_span.appendChild(row2_text);
+			row2_header.appendChild(row2_span);
+			row2.appendChild(row2_header);
+			//row3 contains checkboxes
+			row3 = document.createElement("tr");
+			row3_header = document.createElement("td");
+			row3_span = document.createElement("span");
+			row3_span.className = "table_header"
+			row3_text = document.createTextNode("SELECT");
+			row3_span.appendChild(row3_text);
+			row3_header.appendChild(row3_span);
+			row3.appendChild(row3_header);
 			for(i = 0; i < controls.length; i++){
+				// Prepare control number and points.
 				controlnumber = document.createTextNode(controls[i].number);
 				controlpoints = document.createTextNode(controls[i].points);
 				cell_number = document.createElement("td");
 				cell_pts = document.createElement("td");
 				cell_number.appendChild(controlnumber);
 				cell_pts.appendChild(controlpoints);
+				// Prepare the checkbox.
+				controlchb = document.createElement("input");
+				controlchb.type = "checkbox";
+				controlchb.id = controls[i].number;
+				cell_chb = document.createElement("td");
+				cell_chb.appendChild(controlchb);
+				checkbox_array.push(controlchb);
+				// Append to rows.
 				row1.appendChild(cell_number);
 				row2.appendChild(cell_pts);		
+				row3.appendChild(cell_chb);
 			}
 			tbody = document.createElement("tbody");
 			tbody.appendChild(row1);
 			tbody.appendChild(row2);
+			tbody.appendChild(row3);
 			table.appendChild(tbody);
 		}			
 	}
 }
+
 function get_controls()
 {
 	data = { "uid" : uid, "action" : "GET_CONTROLS" }
@@ -110,8 +110,43 @@ function get_controls()
 
 function get_competitors()
 {
-	data = { "uid" : uid, "action" : "GET_COMPETITORS" };
+	data = { "uid" : uid, "action" : "GET_COMPETITORS" }
 	ws.send(JSON.stringify(data));
 }
 
+function link_controls()
+{
+	competitor_id = document.getElementById("competitor_id").value;
+	pass = document.getElementById("password").value;
+	// First check if the competitor id exists.
+	if (competitor_id_array.indexOf(competitor_id) < 0) {
+    	error("Nonexistent competitor ID.");
+		return;
+	}
+	if (pass == ""){
+		error("Password field cannot be blank.");
+		return;
+	}
+	// Prepare the array of controls to link with the competitor.
+	controls_to_link = [];
+	for(i = 0; i < checkbox_array.length; i++){
+		if(checkbox_array[i].checked){
+			controls_to_link.push(checkbox_array[i].id)
+		}
+	}
 
+	data = { "uid" : uid, "action" : "LINK_CONTROLS", "cid" : competitor_id, "controls" : controls_to_link, "password" : pass }
+
+	ws.send(JSON.stringify(data));
+}
+
+function error(error_body)
+{
+	// Show error_body in error span for 3 seconds.
+	clearTimeout(errorTimeoutID);
+
+	error_span = document.getElementById("error");
+	error_span.innerHTML = "Error: " + error_body;
+
+    errorTimeoutID = setTimeout( function() { error_span.innerHTML = ""; }, 3000 );
+}

@@ -6,6 +6,10 @@ span.red {
 	color : #BB0000;
 }
 
+span.error {
+	color : #BB0000;
+}
+
 span.yellow {
 	color : #BA5D00; 
 }
@@ -13,3 +17,8 @@ span.yellow {
 span.green {
 	color : #00BABA;
 }
+
+span.table_header {
+	font-weight : bold;
+}
+

@@ -12,7 +12,10 @@ import asyncio
 from autobahn.asyncio.websocket import WebSocketServerProtocol, \
     WebSocketServerFactory
 
+# Tell txaio to use asyncio, not Twisted.
 txaio.use_asyncio()
+
+
 # This holds clients and their unique ID's.
 client_list = {} 
 # Our database.
@@ -160,6 +163,30 @@ def delete_control(number):
 def reset_controls(number):
 	db["controls"] = []
 
+#
+# Function to link controls with competitors.
+#
+
+def link_controls(control_numbers, cid):
+	try:
+		# Get competitor and its index.
+		competitors = db["competitors"]
+		competitor = [comp for comp in competitors if comp["cid"] == cid][0]
+		index = competitors.index(competitor)
+		# Get the controls with the given numbers while adding up the competitor's score.
+		controls = db["controls"]
+		controls_to_link = []
+		competitor["score"] = 0 # first zero out the score
+		for control_number in control_numbers:
+			control = [cont for cont in controls if cont["number"] == control_number][0]
+			print(control)
+			competitor["score"] += int(control["points"])
+			controls_to_link.append(control)
+		# Put the competitor back with its controls linked.
+		competitor["controls"] = controls_to_link
+		db["competitors"] = competitors[:index] + [competitor] + competitors[index+1:]
+	except IndexError: # If any list overflow occurs, take it gracefully. 
+		return 1
 
 #
 #
@@ -193,7 +220,7 @@ class MyServerProtocol(WebSocketServerProtocol):
 				send_competitors(uid)
 			elif(action == "GET_CONTROLS"):
 				send_controls(uid)
-			elif ("ADD" in action) or ("DELETE" in action) or ("RESET" in action):
+			elif ("ADD" in action) or ("DELETE" in action) or ("RESET" in action) or ("LINK" in action):
 				if check_hash(data["password"]): # Validate password.
 					if "CATEGORY" in action:
 						if action == "ADD_CATEGORY":
@@ -210,6 +237,10 @@ class MyServerProtocol(WebSocketServerProtocol):
 							add_competitor(name=data["name"], cid=data["id"], category=data["category"], club=data["club"])
 						elif action == "DELETE_COMPETITOR":
 							delete_competitor(cids=data["competitors"])
+						for unique_id in client_list:
+							send_competitors(unique_id)
+					elif "LINK" in action:
+						link_controls(control_numbers=data["controls"], cid=data["cid"])
 						for unique_id in client_list:
 							send_competitors(unique_id)
 					elif "CONTROL" in action:
