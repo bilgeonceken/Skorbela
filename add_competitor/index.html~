@@ -45,7 +45,7 @@
   		</div>
   		
   		<div class="col-md-4 spacino well" >
-  		<h1 class="text text-center " style="font-size:24px" >Add Competitor</h1>
+  		<h1 class="text text-center arvo" style="font-size:24px" >Add Competitor</h1>
   		<div class="row">server connection: <span id="conn_status" class="red"> not connected </span> <br>To overwrite competitor data, enter new info with their ID.</br></div>
   		<div class="row">Name: <input style="margin-left:27px" id="name" /></div>
   		<div class="row">Club <input style="margin-left:40px" id="club" /> </div>
