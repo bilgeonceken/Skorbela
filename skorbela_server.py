@@ -15,7 +15,6 @@ from jsondb.db import Database
 # Tell txaio to use asyncio, not Twisted.
 txaio.use_asyncio()
 
-
 # This holds clients and their unique ID's.
 client_list = {}
 # Our database.

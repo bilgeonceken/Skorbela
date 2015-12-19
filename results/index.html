@@ -2,12 +2,13 @@
 <head>
 <meta charset="utf-8" />
 <link rel="stylesheet" type="text/css" href="../style/style.css" />
-<script src="http://crypto-js.googlecode.com/svn/tags/3.1.2/build/rollups/sha256.js"></script>
 <title> SKORBELA 0.4.0 - RESULTS </title>
 <script src="results.js"></script>
 </head>
-<body>
-WE SHOW STUFF HERE
+<body onLoad="javascript:connect('ws://localhost:31313')">
+<h1> RESULTS </h1>
+<span id="conn_status" class="red"> Getting results... </span>
+<table id="competitors" border=1></table>
 </body>
 <hr />
 <h6> deli çöz bi fişek </h6>
