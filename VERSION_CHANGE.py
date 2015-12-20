@@ -5,7 +5,7 @@ import sys
 file_list = ["index.html",
              "add_category/index.html",
              "add_competitor/index.html",
-             "do_stuff/index.html",
+             "calculate_score/index.html",
              "results/index.html"]
 
 def print_usage():
@@ -16,8 +16,8 @@ if len(sys.argv) != 3:
     print_usage()
     exit(1)
 
-old_string = "SKORBELA " + str(sys.argv[1])
-new_string = "SKORBELA " + str(sys.argv[2])
+old_string = "Skorbela " + str(sys.argv[1])
+new_string = "Skorbela " + str(sys.argv[2])
 
 for file_path in file_list:
     print("processing", file_path)
