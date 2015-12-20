@@ -226,7 +226,7 @@ class MyServerProtocol(WebSocketServerProtocol):
             elif ("ADD" in action) or ("DELETE" in action) or \
                  ("RESET" in action) or ("LINK" in action):
                 if check_hash(data["password"]): # Validate password.
-                    if "CATEGORY" in action:
+                    if "CATEGORY" or "CATEGORIES" in action:
                         if action == "ADD_CATEGORY":
                             add_category(data["category"])
                         elif action == "DELETE_CATEGORY":
