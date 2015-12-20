@@ -1,4 +1,9 @@
 #! /usr/bin/env python3
+"""
+Skorbela-server: The server part of Skorbela, a score-o score tracking system.
+This server listens on a websocket connection and alters its database based on
+the actions given by clients.
+"""
 import string
 import random
 import hashlib
@@ -16,75 +21,75 @@ from jsondb.db import Database
 txaio.use_asyncio()
 
 # This holds clients and their unique ID's.
-client_list = {}
+CLIENT_LIST = {}
 # Our database.
-db = Database("db.json")
+DB_HANDLE = Database("db.json")
 # Hash for authentication. By default the password is SHA256 of "31Seks31", but change this
 # as soon as you've finished testing.
-pass_hash = 'e1ed02693ddaad40e1f2a249a0915b0bc694c4d20760ca1d95c045ede86ff8ba'
+PASS_HASH = 'e1ed02693ddaad40e1f2a249a0915b0bc694c4d20760ca1d95c045ede86ff8ba'
 
 def check_hash(password):
-    global pass_hash
-    return hashlib.sha256(password.encode('utf-8')).hexdigest() == pass_hash
+    "Checks if the hash given by client is valid."
+    return hashlib.sha256(password.encode('utf-8')).hexdigest() == PASS_HASH
 
 #
 # Category handling functions. These handle the connection with jsondatabase.
 #
 
 def get_categories():
-    if db["categories"] is not None:
-        return db["categories"]
+    if DB_HANDLE["categories"] is not None:
+        return DB_HANDLE["categories"]
     else:
         return []
 
 def send_categories(uid):
     data = {"action" : "SEND_CATEGORIES", "categories" : get_categories()}
-    client_list[uid].sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
+    CLIENT_LIST[uid].sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
     return 0
 
 def add_category(category):
     # If the categories key in database is present..
-    if db["categories"] is not None:
-        categories = db["categories"]
+    if DB_HANDLE["categories"] is not None:
+        categories = DB_HANDLE["categories"]
         if category not in categories: # If not present, add it to the database.
-            db["categories"] = db["categories"] + [category]
+            DB_HANDLE["categories"] = DB_HANDLE["categories"] + [category]
             return 0
         else:
             return 1
     else:
-        db["categories"] = [category]
+        DB_HANDLE["categories"] = [category]
 
 def delete_category(category):
-    if db["categories"] is not None:
-        categories = db["categories"]
+    if DB_HANDLE["categories"] is not None:
+        categories = DB_HANDLE["categories"]
         # Filter our category out of the category list.
-        db["categories"] = [cat for cat in categories if cat != category]
+        DB_HANDLE["categories"] = [cat for cat in categories if cat != category]
     else:
-        db["categories"] = []
+        DB_HANDLE["categories"] = []
 
 def reset_categories():
-    db["categories"] = []
+    DB_HANDLE["categories"] = []
 
 #
 # Competitor handling functions.
 #
 
 def get_competitors():
-    if db["competitors"] is not None:
+    if DB_HANDLE["competitors"] is not None:
         # Sort competitors by their CID's.
-        return sorted(db["competitors"], key=lambda comp: comp["cid"])
+        return sorted(DB_HANDLE["competitors"], key=lambda comp: comp["cid"])
     else:
         return []
 
 def send_competitors(uid):
     data = {"action" : "SEND_COMPETITORS", "competitors" : get_competitors()}
-    client_list[uid].sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
+    CLIENT_LIST[uid].sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
     return 0
 
 # ID parameter is cid to not interfere with python's id keyword.
 def add_competitor(name, club, cid, category):
-    if db["competitors"] is not None:
-        competitors = db["competitors"]
+    if DB_HANDLE["competitors"] is not None:
+        competitors = DB_HANDLE["competitors"]
         # We check for competitor's ID in the database.
         if cid in [a["cid"] for a in competitors]:
             # find the competitor with given cid
@@ -94,72 +99,72 @@ def add_competitor(name, club, cid, category):
             competitor["club"] = club
             # Overwrite the database with the new competitor.
             index = competitors.index(competitor)
-            db["competitors"] = competitors[:index] + [competitor] + competitors[index+1:]
+            DB_HANDLE["competitors"] = competitors[:index] + [competitor] + competitors[index+1:]
         else:
             # If the given cid is not in the database, create new competitor.
             competitor = {"name" : name, "club" : club, "cid" : cid,
                           "category" : category, "controls" : [], "score" : 0}
-            db["competitors"] = competitors + [competitor]
+            DB_HANDLE["competitors"] = competitors + [competitor]
         return 0
     else:
         competitor = {"name" : name, "club" : club, "cid" : cid,
                       "category" : category, "controls" : [], "score" : 0}
-        db["competitors"] = [competitor]
+        DB_HANDLE["competitors"] = [competitor]
         return 0
 
 # Delete_competitor takes a list of CIDs as parameter.
 def delete_competitor(cids):
-    if db["competitors"] is not None:
-        competitors = db["competitors"]
-        db["competitors"] = [comp for comp in competitors if comp["cid"] not in cids]
+    if DB_HANDLE["competitors"] is not None:
+        competitors = DB_HANDLE["competitors"]
+        DB_HANDLE["competitors"] = [comp for comp in competitors if comp["cid"] not in cids]
     else:
-        db["competitors"] = []
+        DB_HANDLE["competitors"] = []
 
 #
 # Control handling functions.
 #
 
 def get_controls():
-    if db["controls"] is not None:
+    if DB_HANDLE["controls"] is not None:
         # Sort controls by their numbers.
-        return sorted(db["controls"], key=lambda cont: cont["number"])
+        return sorted(DB_HANDLE["controls"], key=lambda cont: cont["number"])
     else:
         return []
 
 def send_controls(uid):
     data = {"action" : "SEND_CONTROLS", "controls" : get_controls()}
-    client_list[uid].sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
+    CLIENT_LIST[uid].sendMessage(json.dumps(data).encode('utf-8'), isBinary=False)
     return 0
 
 
 def add_control(number, points):
-    if db["controls"] is not None:
-        controls = db["controls"]
+    if DB_HANDLE["controls"] is not None:
+        controls = DB_HANDLE["controls"]
         if number in [a["number"] for a in controls]:
             # Find the control with given number.
             control = [a for a in controls if a["number"] == number][0]
             control["points"] = points
             # Overwrite the database with new number.
             index = controls.index(control)
-            db["controls"] = controls[:index] + [control] + controls[index+1:]
+            DB_HANDLE["controls"] = controls[:index] + [control] + controls[index+1:]
         else:
             control = {"number" : number, "points" : points}
-            db["controls"] = controls + [control]
+            DB_HANDLE["controls"] = controls + [control]
         return 0
     else:
         control = {"number" : number, "points" : points}
-        db["controls"] = [control]
+        DB_HANDLE["controls"] = [control]
         return 0
 
 def delete_control(number):
-    if db["controls"] is not None:
-        controls = db["controls"]
-        db["controls"] = [cont for cont in controls if cont["number"] != number]
+    if DB_HANDLE["controls"] is not None:
+        controls = DB_HANDLE["controls"]
+        DB_HANDLE["controls"] = [cont for cont in controls if cont["number"] != number]
     else:
-        db["controls"] = []
+        DB_HANDLE["controls"] = []
 
 def reset_controls():
-    db["controls"] = []
+    DB_HANDLE["controls"] = []
 
 #
 # Function to link controls with competitors.
@@ -168,11 +173,11 @@ def reset_controls():
 def link_controls(control_numbers, cid):
     try:
         # Get competitor and its index.
-        competitors = db["competitors"]
+        competitors = DB_HANDLE["competitors"]
         competitor = [comp for comp in competitors if comp["cid"] == cid][0]
         index = competitors.index(competitor)
         # Get the controls with the given numbers while adding up the competitor's score.
-        controls = db["controls"]
+        controls = DB_HANDLE["controls"]
         controls_to_link = []
         competitor["score"] = 0 # first zero out the score
         for control_number in control_numbers:
@@ -182,7 +187,7 @@ def link_controls(control_numbers, cid):
             controls_to_link.append(control)
         # Put the competitor back with its controls linked.
         competitor["controls"] = controls_to_link
-        db["competitors"] = competitors[:index] + [competitor] + competitors[index+1:]
+        DB_HANDLE["competitors"] = competitors[:index] + [competitor] + competitors[index+1:]
     except IndexError: # If any list overflow occurs, take it gracefully.
         return 1
 
@@ -199,8 +204,8 @@ class MyServerProtocol(WebSocketServerProtocol):
         print("WebSocket connection open.")
         # Assign the connection an unique ID.
         self.uid = ''.join(random.choice(string.ascii_uppercase + string.digits) for _ in range(8))
-        # Save the connection into the client_list.
-        client_list[self.uid] = self
+        # Save the connection into the CLIENT_LIST.
+        CLIENT_LIST[self.uid] = self
         # Inform the client about its UID.
         print("Assigned %s to the connection as the unique ID." % self.uid)
         data = {"action" : "SEND_UID", "uid" : self.uid}
@@ -229,7 +234,7 @@ class MyServerProtocol(WebSocketServerProtocol):
                         elif action == "RESET_CATEGORIES":
                             reset_categories()
                         # Send everyone the new category list.
-                        for unique_id in client_list:
+                        for unique_id in CLIENT_LIST:
                             send_categories(unique_id)
                     elif "COMPETITOR" in action:
                         if action == "ADD_COMPETITOR":
@@ -237,11 +242,11 @@ class MyServerProtocol(WebSocketServerProtocol):
                                            category=data["category"], club=data["club"])
                         elif action == "DELETE_COMPETITOR":
                             delete_competitor(cids=data["competitors"])
-                        for unique_id in client_list:
+                        for unique_id in CLIENT_LIST:
                             send_competitors(unique_id)
                     elif "LINK" in action:
                         link_controls(control_numbers=data["controls"], cid=data["cid"])
-                        for unique_id in client_list:
+                        for unique_id in CLIENT_LIST:
                             send_competitors(unique_id)
                     elif "CONTROL" in action:
                         if action == "ADD_CONTROL":
@@ -250,7 +255,7 @@ class MyServerProtocol(WebSocketServerProtocol):
                             delete_control(data["number"])
                         elif action == "RESET_CONTROLS":
                             reset_controls()
-                        for unique_id in client_list:
+                        for unique_id in CLIENT_LIST:
                             send_controls(unique_id)
                 else:
                     print("Invalid password from UID = %s" % uid)
@@ -267,12 +272,11 @@ class MyServerProtocol(WebSocketServerProtocol):
 
     def onClose(self, wasClean, code, reason):
         # Remove the connection from websockets list.
-        del client_list[self.uid]
+        del CLIENT_LIST[self.uid]
         print(("WebSocket connection with ID %s closed: {0}" % self.uid).format(reason))
 
 
 if __name__ == '__main__':
-
     factory = WebSocketServerFactory(u"ws://127.0.0.1:31313", debug=False)
     factory.protocol = MyServerProtocol
 

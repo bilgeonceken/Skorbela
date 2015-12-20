@@ -1,102 +1,109 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <link rel="stylesheet" type="text/css" href="../fonts.css">
-    <title>Skorbela</title>
-    <link href="../css/bootstrap.min.css" rel="stylesheet">
-  </head>
-  <body background="../images/bg.png">
 
-  
+<head>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <link rel="stylesheet" type="text/css" href="../style/fonts.css" />
+    <link rel="stylesheet" type="text/css" href="../style/bootstrap.min.css" />
+    <link rel="stylesheet" type="text/css" href="../style/style.css"/>
+    <script src="add_category.js"></script>
+    <title>Add Category</title>
+</head>
+
+<body background="../images/bg.png" onLoad="connect('ws://localhost:31313');" >  
   
 <div class="container" style="margin-top:20px ">
-  	
-	
-	
-	
-	
-	<div class="row">
-  		<div class="col-md-4 col-xs-4"></div>
-  		<div class="col-md-4 col-xs-4"><a href="../index.html"><img style="margin-left:80px" class="img img-responsive"src="../images/skorlogo.png"></a></div>
-  		<div class="col-md-4 col-xs-4"></div>
-	</div>
-			<div class="row">
-  				<div class="col-md-5 box left-box well ">
-  				
-	  		<h1 class="text text-center" style="font-size:24px" >Add Category</h1>
-	  		<div class="row">server connection: <span id="conn_status" class="red"> not connected </span></div>
-	  		<div class="row">Category : <input id="category" /></div>
-	  		<div class="row">Password: <input id="password" type="password" /></div>
-	  		<div class="row"><b>Available categories:</b><div id="categories">Getting categories...</div></div>
-	  		
-	  		<div class="row">
-	  		<div class="col-md-4"></div>
-	  		<div class="col-md-4"><button class="btn btn-primary btn-block spacino" onClick="add_category()" >Add</button></div>
-	  		<div class="col-md-4"></div>
-	 		</div>
-	 		
-	 		<div class="row">
-	  		<div class="col-md-4"></div>
-	  		<div class="col-md-4"><button class="btn btn-danger btn-block spacino"onClick="delete_category()" id="delete_category" > Delete </button></div>
-	  		<div class="col-md-4"></div>
-	 		</div>
-	 		
-	 		<div class="row">
-	  		<div class="col-md-4"></div>
-	  		<div class="col-md-4"><button onClick="reset_categories()" class="btn btn-danger btn-block spacino"> Reset </button></div>
-	  		<div class="col-md-4"></div>
-  		
-  			</div>
-  			</div>
-  			
-  			<div class="col-md-2 "></div>
-  			
-  			<div class="col-md-5 box right-box well">
-				<h1 class="text text-center " style="font-size:24px" >Add Control</h1>
-		  		
-		  		<div class="row">Control Number: <input style="margin-left:4px"id="control_number" /></div>
-		  		<div class="row">Control Points: <input style="margin-left:16px" id="control_points" /></div>
-				<div class="row"><b>Controls :</b> <div id="controls"> Getting controls... </div>
-		  	
-		  		
-		  		
-		  		
-		  		<div class="row">
-		  		<div class="col-md-4"></div>
-		  		<div class="col-md-4"><button style="margin-top:27px"class="btn btn-primary btn-block spacino" onClick="add_control()">Add</button></div>
-		  		<div class="col-md-4"></div>
-		 		</div>
-		 		
-		 		<div class="row">
-		  		<div class="col-md-4"></div>
-		  		<div class="col-md-4"><button class="btn btn-danger btn-block spacino " onClick="delete_control()" id="delete_control">Delete</button></div>
-		  		<div class="col-md-4"></div>
-		 		</div>
-		 		
-		 		<div class="row">
-		  		<div class="col-md-4"></div>
-		  		<div class="col-md-4"><button onClick="reset_controls()" class="btn btn-danger  btn-block spacino"> Reset </button></div>
-		  		<div class="col-md-4"></div>
-	  		
-  			</div>
-  			
-  			
-  			</div>
-  			
-  			
-		</div>
-	
-	
+    <div class="row">
+        <div class="col-md-4 col-xs-4"></div>
+        <div class="col-md-4 col-xs-4">
+            <a href="../index.html"><img style="margin-left:80px" class="img img-responsive"src="../images/skorlogo.png"></a>
+        </div>
+        <div class="col-md-4 col-xs-4"></div>
+    </div>
+    <div class="row">
+        <div class="col-md-5 box left-box well ">
+            <h1 class="text text-center" style="font-size:24px">
+                Add Category
+            </h1>
+            <div class="row">
+                server connection: <span id="conn_status" class="red"> not connected </span>
+            </div>
+            <div class="row">
+                Category : <input id="category" />
+            </div>
+            <div class="row">
+                Password: <input id="password" type="password" />
+            </div>
+            <div class="row">
+                <b>Available categories:</b><div id="categories">Getting categories...</div>
+            </div>
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4">
+                    <button class="btn btn-primary btn-block spacino" onClick="add_category()" >Add</button>
+                </div>
+                <div class="col-md-4"></div>
+            </div>
+            <div class="row">
+                <div class="col-md-4"></div>
+                <div class="col-md-4">
+                    <button class="btn btn-danger btn-block spacino"onClick="delete_category()" id="delete_category" > Delete </button>
+                </div>
+                <div class="col-md-4"></div>
+                    </div>    
+                    <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <button onClick="reset_categories()" class="btn btn-danger btn-block spacino"> Reset </button>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+            </div>
 
-	</div>
+            <div class="col-md-2 "></div>
+                        
+            <div class="col-md-5 box right-box well">
+                <h1 class="text text-center " style="font-size:24px" >
+                    Add Control
+                </h1>
+                <div class="row">
+                    Control Number: <input style="margin-left:4px"id="control_number" />
+                </div>
+                <div class="row">
+                    Control Points: <input style="margin-left:16px" id="control_points" />
+                </div>
+                <div class="row">
+                    <b>Controls :</b> <div id="controls"> Getting controls... </div>            
+                    <div class="row">
+                        <div class="col-md-4"></div>
+                        <div class="col-md-4">
+                            <button style="margin-top:27px"class="btn btn-primary btn-block spacino" onClick="add_control()">Add</button>
+                        </div>
+                        <div class="col-md-4"></div>
+                    </div>
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <button class="btn btn-danger btn-block spacino " onClick="delete_control()" id="delete_control">Delete</button>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+                <div class="row">
+                    <div class="col-md-4"></div>
+                    <div class="col-md-4">
+                        <button onClick="reset_controls()" class="btn btn-danger  btn-block spacino"> Reset </button>
+                    </div>
+                    <div class="col-md-4"></div>
+                </div>
+            </div>      
+        </div>
+    </div>
 </div>
-  
-  </body>
+</body>
 </html>
 
 
 
-		  		
+                                
