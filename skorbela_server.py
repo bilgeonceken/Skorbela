@@ -27,7 +27,7 @@ CLIENT_LIST = {}
 DB_HANDLE = Database("db.json")
 # Hash for authentication. By default the password is SHA256 of "31Seks31", but change this
 # as soon as you've finished testing.
-PASS_HASH = 'e1ed02693ddaad40e1f2a249a0915b0bc694c4d20760ca1d95c045ede86ff8ba'
+PASS_HASH = "e1ed02693ddaad40e1f2a249a0915b0bc694c4d20760ca1d95c045ede86ff8ba"
 
 def check_hash(password):
     "Checks if the hash given by client is valid."

@@ -6,6 +6,7 @@ and minifies Skorbela's JS.
 import sys
 import glob
 import socket
+import hashlib
 import subprocess
 
 from subprocess import PIPE
@@ -34,6 +35,19 @@ def main():
     www_directory = input()
     if www_directory == "":
         www_directory = "/var/www/html"
+
+    print("[BOOTSTRAP] What would you like as the password?")
+    password = input()
+    with open("./skorbela_server.py", "r") as f_handle:
+        py_string = f_handle.read()
+    lines = py_string.split("\n")
+    for line in lines:
+        if line.startswith("PASS_HASH"):
+            index = lines.index(line)
+            new_line = "\nPASS_HASH = \"" + hashlib.sha256(password.encode('utf-8')).hexdigest() + "\"\n"
+            py_string = "\n".join(lines[:index]) + new_line + "\n".join(lines[index+1:])
+    with open("./skorbela_server.py", "w") as f_handle:
+        f_handle.write(py_string)
 
     print("[BOOTSTRAP] Copying files...")
     subprocess.call(["mkdir", "-pv", www_directory + "/Skorbela/"])
@@ -73,8 +87,7 @@ def main():
         html_file = www_directory + "/Skorbela/" + html_file
         with open(html_file, 'r') as f_handle:
             html_string = f_handle.read()
-        html_string.replace("onLoad=\"connect(\'ws://localhost:31313\');\"",
-                            "onLoad=\"connect(\'" + websocket_address + "\');\"")
+        html_string = html_string.replace("ws://localhost:31313", websocket_address)
         with open(html_file, 'w') as f_handle:
             f_handle.write(html_string)
 
