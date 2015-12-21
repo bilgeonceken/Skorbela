@@ -287,7 +287,7 @@ if __name__ == '__main__':
     factory.protocol = MyServerProtocol
 
     loop = asyncio.get_event_loop()
-    coro = loop.create_server(factory, socket.getfqdn(), 31313)
+    coro = loop.create_server(factory, "0.0.0.0", 31313)
     server = loop.run_until_complete(coro)
 
     try:
