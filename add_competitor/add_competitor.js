@@ -6,6 +6,19 @@
 var ws, uid; // export die variables
 var cb_array = [];
 
+function error(error_body) {
+    "use strict";
+    // Show error_body in error span for 3 seconds.
+    clearTimeout(window.errorTimeoutID);
+
+    var error_span = document.getElementById("error");
+    error_span.innerHTML = "Error: " + error_body;
+
+    window.errorTimeoutID = setTimeout(function () {
+        error_span.innerHTML = "";
+    }, 3000);
+}
+
 function get_controls() {
     "use strict";
     var data = {"uid": window.uid, "action": "GET_CONTROLS"};
@@ -30,9 +43,19 @@ function add_competitor() {
         club = document.getElementById("club").value,
         id = document.getElementById("id").value,
         dropdown = document.getElementById("categories"),
-        category = dropdown.options[dropdown.selectedIndex].text,
+        category,
         pass = document.getElementById("password").value,
-        data = {"uid": uid, "action": "ADD_COMPETITOR", "name": name, "club": club, "id": id, "category": category, "password": pass};
+        data;
+    if (pass === "") {
+        error("Password field cannot be blank.");
+        return;
+    }
+    if (dropdown.options[dropdown.selectedIndex] === undefined) {
+        error("No category selected.");
+        return;
+    }
+    category = dropdown.options[dropdown.selectedIndex].text;
+    data = {"uid": uid, "action": "ADD_COMPETITOR", "name": name, "club": club, "id": id, "category": category, "password": pass};
     window.ws.send(JSON.stringify(data));
 }
 
@@ -43,6 +66,10 @@ function delete_competitor() {
         i = 0,
         data;
 
+    if (pass === "") {
+        error("Password field cannot be blank.");
+        return;
+    }
     // Loop over checkbox array to see which are checked.
     for (i = 0; i < cb_array.length; i += 1) {
         if (cb_array[i].checked) {
@@ -153,5 +180,11 @@ function connect(address) {
             }
             table.appendChild(tbody);
         }
+    };
+
+    /* Inform the user when the connection is closed. */
+    window.ws.onclose = function () {
+        document.getElementById("conn_status").innerHTML = "not connected";
+        document.getElementById("conn_status").className = "red";
     };
 }

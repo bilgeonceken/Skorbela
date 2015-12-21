@@ -5,6 +5,7 @@ This server listens on a websocket connection and alters its database based on
 the actions given by clients.
 """
 import string
+import socket
 import random
 import hashlib
 import asyncio
@@ -226,7 +227,7 @@ class MyServerProtocol(WebSocketServerProtocol):
             elif ("ADD" in action) or ("DELETE" in action) or \
                  ("RESET" in action) or ("LINK" in action):
                 if check_hash(data["password"]): # Validate password.
-                    if "CATEGORY" or "CATEGORIES" in action:
+                    if "CATEGORY" in action or "CATEGORIES" in action:
                         if action == "ADD_CATEGORY":
                             add_category(data["category"])
                         elif action == "DELETE_CATEGORY":
@@ -257,6 +258,8 @@ class MyServerProtocol(WebSocketServerProtocol):
                             reset_controls()
                         for unique_id in CLIENT_LIST:
                             send_controls(unique_id)
+                    else:
+                        print("Unknown action from UID = %s" % uid)
                 else:
                     print("Invalid password from UID = %s" % uid)
 
@@ -272,16 +275,19 @@ class MyServerProtocol(WebSocketServerProtocol):
 
     def onClose(self, wasClean, code, reason):
         # Remove the connection from websockets list.
-        del CLIENT_LIST[self.uid]
-        print(("WebSocket connection with ID %s closed: {0}" % self.uid).format(reason))
+        if self.uid:
+            del CLIENT_LIST[self.uid]
+            print(("WebSocket connection with ID %s closed: {0}" % self.uid).format(reason))
+        else:
+            print("Some websocket connection was closed.")
 
 
 if __name__ == '__main__':
-    factory = WebSocketServerFactory(u"ws://127.0.0.1:31313", debug=False)
+    factory = WebSocketServerFactory(u"ws://" + socket.getfqdn() + ":31313", debug=False)
     factory.protocol = MyServerProtocol
 
     loop = asyncio.get_event_loop()
-    coro = loop.create_server(factory, '0.0.0.0', 31313)
+    coro = loop.create_server(factory, socket.getfqdn(), 31313)
     server = loop.run_until_complete(coro)
 
     try:

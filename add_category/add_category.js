@@ -33,6 +33,10 @@ function add_category() {
     var pass = document.getElementById("password").value,
         category = document.getElementById("category").value,
         data = {"password": pass, "uid": window.uid,  "action": "ADD_CATEGORY", "category": category};
+    if (pass === "") {
+        error("Password field cannot be blank.");
+        return;
+    }
     window.ws.send(JSON.stringify(data));
 }
 
@@ -43,6 +47,10 @@ function delete_category() {
             category = dropdown.options[dropdown.selectedIndex].text,
             pass = document.getElementById("password").value,
             data = {"password": pass, "uid": window.uid, "action": "DELETE_CATEGORY", "category": category};
+        if (pass === "") {
+            error("Password field cannot be blank.");
+            return;
+        }
         window.ws.send(JSON.stringify(data));
     } catch (e) {
         /* TO-DO : Put a div in pages to display error messages. */
@@ -54,6 +62,10 @@ function reset_categories() {
     "use strict";
     var pass = document.getElementById("password").value,
         data = {"password": pass, "uid": window.uid, "action": "RESET_CATEGORIES"};
+    if (pass === "") {
+        error("Password field cannot be blank.");
+        return;
+    }
     window.ws.send(JSON.stringify(data));
 }
 
@@ -73,7 +85,10 @@ function add_control() {
         control_number = document.getElementById("control_number").value,
         control_points = document.getElementById("control_points").value,
         data = {"password": pass, "uid": window.uid, "action": "ADD_CONTROL", "number": control_number, "points": control_points};
-
+    if (pass === "") {
+        error("Password field cannot be blank.");
+        return;
+    }
     window.ws.send(JSON.stringify(data));
 }
 
@@ -84,6 +99,10 @@ function delete_control() {
             control = dropdown.options[dropdown.selectedIndex].value,
             pass = document.getElementById("password").value,
             data = {"password": pass, "uid": window.uid, "action": "DELETE_CONTROL", "number": control};
+        if (pass === "") {
+            error("Password field cannot be blank.");
+            return;
+        }
         window.ws.send(JSON.stringify(data));
     } catch (e) {
         error(e.name + ": " + e.message);
@@ -171,5 +190,11 @@ function connect(address) {
             }
             document.getElementById("controls").appendChild(dropdown);
         }
+    };
+
+    /* Inform the user when the connection is closed. */
+    window.ws.onclose = function () {
+        document.getElementById("conn_status").innerHTML = "not connected";
+        document.getElementById("conn_status").className = "red";
     };
 }

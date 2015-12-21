@@ -8,7 +8,7 @@
     <link rel="stylesheet" type="text/css" href="../style/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../style/style.css"/>
     <script src="add_competitor.js"></script>
-    <title>Skorbela 0.6.3 - Add Competitor</title>
+    <title>Skorbela 0.6.5 - Add Competitor</title>
 </head>
 
 <body background="../images/bg.png" onLoad="javascript:connect('ws://localhost:31313');">
@@ -27,7 +27,9 @@
                 Add Competitor
             </h1>
             <div class="row">
-                server connection: <span id="conn_status" class="red"> not connected </span> <br>To overwrite competitor data, enter new info with their ID.</br>
+                server connection: <span id="conn_status" class="red"> not connected </span> <br />
+                To overwrite competitor data, enter new info with their ID.<br />
+                <span id="error" class="error"> </span>
             </div>
             <div class="row">
                 Name: <input style="margin-left:27px" id="name" />

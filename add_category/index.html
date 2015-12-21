@@ -9,7 +9,7 @@
     <link rel="stylesheet" type="text/css" href="../style/bootstrap.min.css" />
     <link rel="stylesheet" type="text/css" href="../style/style.css"/>
     <script src="add_category.js"></script>
-    <title>Skorbela 0.6.3 - Add Category</title>
+    <title>Skorbela 0.6.5 - Add Category</title>
 </head>
 
 <body background="../images/bg.png" onLoad="connect('ws://localhost:31313');" >  
@@ -28,7 +28,8 @@
                 Add Category
             </h1>
             <div class="row">
-                server connection: <span id="conn_status" class="red"> not connected </span>
+                server connection: <span id="conn_status" class="red"> not connected </span> <br />
+                <span id="error" class="error"> </span>
             </div>
             <div class="row">
                 Category : <input id="category" />
