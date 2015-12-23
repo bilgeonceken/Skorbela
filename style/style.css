@@ -1,24 +1,31 @@
 button.dangerzone {
-	background-color: #ff6666;
+    background-color: #ff6666;
 }
 
 span.red {
-	color : #BB0000;
+    color: #BB0000;
 }
 
 span.error {
-	color : #BB0000;
+    color: #BB0000;
 }
 
 span.yellow {
-	color : #BA5D00; 
+    color: #BA5D00; 
 }
 
 span.green {
-	color : #00BABA;
+    color: #00BABA;
 }
 
 span.table_header {
-	font-weight : bold;
+    font-weight: bold;
 }
 
+tbody tr:nth-child(odd) {
+    background-color: #858585; 
+}
+
+th, td {
+    padding: 3px;
+}
