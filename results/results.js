@@ -85,7 +85,6 @@ function connect(address) {
         var data = JSON.parse(evt.data),
             action = data.action,
             category,
-            categories,
             competitors,
             tableContainer,
             header,
@@ -105,20 +104,19 @@ function connect(address) {
             // Get competitors since we made the connection.
             get_competitors();
 
-        } else if (action === "SEND_CATEGORIES") {
-            categories = data.categories;
         } else if (action === "SEND_COMPETITORS") {
             /* First group the competitors according to their categories. */
             competitors = sort_competitors(data.competitors);
-            /* Now, for each category we build another fellow table. */
+            /* Do not forget to empty the table container first- we are rebuilding the table. */
             tableContainer = document.getElementById("table-container");
+            tableContainer.innerHTML = "";
+            /* Now, for each category we build another fellow table. */
             for (category in competitors) {
                 if (competitors.hasOwnProperty(category)) {
                     /* We need a header for the table first. */
                     header = document.createElement("h4");
                     header.appendChild(document.createTextNode(category));
                     tableContainer.appendChild(header);
-                    
                     table = document.createElement("table");
                     table.border = 1;
                     table.id = category;
