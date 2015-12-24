@@ -26,9 +26,12 @@ function get_competitors() {
 }
 
 /* Returns an object with structure { category1 : [competitors], category2: [... } */
-function sort_competitors(competitors) {
+/* TO-DO: Optimize the sorting routine- sort while building the array. */
+function sort_competitors(competitors, sort) {
     "use strict";
-    var out_object = {};
+    sort = sort || 1;
+    var category,
+        out_object = {};
 
     competitors.forEach(function (competitor) {
         if (out_object.hasOwnProperty(competitor.category)) {
@@ -38,6 +41,13 @@ function sort_competitors(competitors) {
         }
     });
 
+    for (category in out_object) {
+        if (out_object.hasOwnProperty(category)) {
+            out_object[category].sort(function (e1, e2) {
+                return e2.score - e1.score;
+            });
+        }
+    }
     return out_object;
 }
 
@@ -106,7 +116,7 @@ function connect(address) {
 
         } else if (action === "SEND_COMPETITORS") {
             /* First group the competitors according to their categories. */
-            competitors = sort_competitors(data.competitors);
+            competitors = sort_competitors(data.competitors, 1);
             /* Do not forget to empty the table container first- we are rebuilding the table. */
             tableContainer = document.getElementById("table-container");
             tableContainer.innerHTML = "";
