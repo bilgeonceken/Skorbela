@@ -25,6 +25,48 @@ function get_competitors() {
     window.ws.send(JSON.stringify(data));
 }
 
+/* Returns an object with structure { category1 : [competitors], category2: [... } */
+function sort_competitors(competitors) {
+    "use strict";
+    var out_object = {};
+
+    competitors.forEach(function (competitor) {
+        if (out_object.hasOwnProperty(competitor.category)) {
+            out_object[competitor.category].push(competitor);
+        } else {
+            out_object[competitor.category] = [competitor];
+        }
+    });
+
+    return out_object;
+}
+
+/* Builds a row for a competitor and returns it. */
+function build_row_for_competitor(competitor) {
+    "use strict";
+
+    var row = document.createElement("tr"),
+        idCell = document.createElement("td"),
+        nameCell = document.createElement("td"),
+        clubCell = document.createElement("td"),
+        categoryCell = document.createElement("td"),
+        scoreCell = document.createElement("td");
+
+    idCell.appendChild(document.createTextNode(competitor.cid));
+    nameCell.appendChild(document.createTextNode(competitor.name));
+    clubCell.appendChild(document.createTextNode(competitor.club));
+    categoryCell.appendChild(document.createTextNode(competitor.category));
+    scoreCell.appendChild(document.createTextNode(competitor.score));
+
+    row.appendChild(idCell);
+    row.appendChild(nameCell);
+    row.appendChild(clubCell);
+    row.appendChild(categoryCell);
+    row.appendChild(scoreCell);
+
+    return row;
+}
+
 function connect(address) {
     "use strict";
     window.ws = new WebSocket(address);
@@ -42,21 +84,13 @@ function connect(address) {
         // try to parse server's message
         var data = JSON.parse(evt.data),
             action = data.action,
+            category,
             categories,
-            category_dropdown,
-            option,
-            content,
             competitors,
-            competitor,
+            tableContainer,
+            header,
             table,
-            tbody,
-            row,
-            id_cell,
-            name_cell,
-            club_cell,
-            category_cell,
-            score_cell,
-            i = 0;
+            tbody;
 
         /* If server is sending our unique ID, we established the connection. */
         if (action === "SEND_UID") {
@@ -64,52 +98,41 @@ function connect(address) {
             window.uid = data.uid;
             document.getElementById("conn_status").innerHTML = "Connected - UID: " + window.uid;
             document.getElementById("conn_status").className = "green";
+            /* 2 seconds later, the connection status will vanish. */
+            window.setTimeout(function () {
+                document.getElementById("conn_status").innerHTML = "";
+            }, 2000);
             // Get competitors since we made the connection.
             get_competitors();
 
         } else if (action === "SEND_CATEGORIES") {
             categories = data.categories;
-            category_dropdown = document.getElementById("categories");
-            // Empty the dropdown first.
-            category_dropdown.innerHTML = "";
-            for (i = 0; i < categories.length; i += 1) {
-                option = document.createElement("option");
-                content = document.createTextNode(categories[i]);
-                option.appendChild(content);
-                category_dropdown.appendChild(option);
-            }
         } else if (action === "SEND_COMPETITORS") {
-            competitors = data.competitors;
-            // Get our table and restore its initial state.
-            table = document.getElementById("competitors");
-            table.innerHTML = "<thead> <tr> <th> ID </th> <th> NAME </th> <th> CLUB </th> <th> CATEGORY </th> <th> SCORE </th>    </tr> </thead>";
-            // Append competitor data onto table's body.
-            tbody = document.createElement("tbody");
-            /* Iterate through every competitor and make a row for them. */
-            for (i = 0; i < competitors.length; i += 1) {
-                competitor = competitors[i];
-                // create cells
-                row = document.createElement("tr");
-                id_cell = document.createElement("td");
-                id_cell.appendChild(document.createTextNode(competitor.cid));
-                name_cell = document.createElement("td");
-                name_cell.appendChild(document.createTextNode(competitor.name));
-                club_cell = document.createElement("td");
-                club_cell.appendChild(document.createTextNode(competitor.club));
-                category_cell = document.createElement("td");
-                category_cell.appendChild(document.createTextNode(competitor.category));
-                score_cell = document.createElement("td");
-                score_cell.appendChild(document.createTextNode(competitor.score));
-                // Make row with cells.
-                row.appendChild(id_cell);
-                row.appendChild(name_cell);
-                row.appendChild(club_cell);
-                row.appendChild(category_cell);
-                row.appendChild(score_cell);
-                // Add row to tbody.
-                tbody.appendChild(row);
+            /* First group the competitors according to their categories. */
+            competitors = sort_competitors(data.competitors);
+            /* Now, for each category we build another fellow table. */
+            tableContainer = document.getElementById("table-container");
+            for (category in competitors) {
+                if (competitors.hasOwnProperty(category)) {
+                    /* We need a header for the table first. */
+                    header = document.createElement("h4");
+                    header.appendChild(document.createTextNode(category));
+                    tableContainer.appendChild(header);
+                    
+                    table = document.createElement("table");
+                    table.border = 1;
+                    table.id = category;
+                    table.innerHTML = "<thead> <tr> <th> ID </th> <th> NAME </th> <th> CLUB </th> <th> CATEGORY </th> <th> SCORE </th> </tr> </thead>";
+                    tbody = document.createElement("tbody");
+                    /* Iterate through every competitor and make a row for them. */
+                    competitors[category].forEach(function (competitor) {
+                        tbody.appendChild(build_row_for_competitor(competitor));
+                    });
+                    /* Finally, append the table to the table container. */
+                    table.appendChild(tbody);
+                    tableContainer.appendChild(table);
+                }
             }
-            table.appendChild(tbody);
         }
     };
 
